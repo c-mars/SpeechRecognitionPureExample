@@ -10,7 +10,6 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import java.util.ArrayList;
-import java.util.Locale;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -21,7 +20,7 @@ public class MainActivity extends ActionBarActivity {
     private ProgressBar progressBar;
 
     private SpeechRecognizer speechRecognizer;
-    private SpeechRecognizer.RecognizerCallbacks recognizerCallbacks;
+    private SpeechRecognizer.RecognizerListener recognizerListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,8 +33,8 @@ public class MainActivity extends ActionBarActivity {
 
         progressBar.setVisibility(View.INVISIBLE);
 
-        recognizerCallbacks = createRecognizerCallbacks();
-        speechRecognizer = new SpeechRecognizer(this, recognizerCallbacks, true);
+        recognizerListener = createRecognizerCallbacks();
+        speechRecognizer = new SpeechRecognizer(this, recognizerListener, true);
 
 //        this can be used to list available languages and choose not default language
 //        speechRecognizer.chooseFromAvailableLanguages(new DialogLanguageChooser());
@@ -63,8 +62,8 @@ public class MainActivity extends ActionBarActivity {
         speechRecognizer.stopListening();
     }
 
-    private SpeechRecognizer.RecognizerCallbacks createRecognizerCallbacks() {
-        return new SpeechRecognizer.RecognizerCallbacks() {
+    private SpeechRecognizer.RecognizerListener createRecognizerCallbacks() {
+        return new SpeechRecognizer.RecognizerListener() {
             @Override
             public void onInit() {
                 progressBar.setMax(10);

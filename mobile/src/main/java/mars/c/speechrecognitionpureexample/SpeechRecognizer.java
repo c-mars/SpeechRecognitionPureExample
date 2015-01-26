@@ -30,17 +30,17 @@ public class SpeechRecognizer {
     private boolean listening = false;
 
 //    custom
-    private RecognizerCallbacks recognizerCallbacks;
+    private RecognizerListener recognizerListener;
     private Logger logger;
     private final int MAX_RESULTS = 3;
 
-    public SpeechRecognizer(Context context, RecognizerCallbacks recognizerCallbacks, boolean useLogger) {
+    public SpeechRecognizer(Context context, RecognizerListener recognizerListener, boolean useLogger) {
         this.context = context;
-        this.recognizerCallbacks = recognizerCallbacks;
+        this.recognizerListener = recognizerListener;
         this.logger = new Logger();
         this.logger.setOn(useLogger);
 
-        this.recognitionListener = createRecognitionListener(this.recognizerCallbacks, this.logger);
+        this.recognitionListener = createRecognitionListener(this.recognizerListener, this.logger);
 
         this.locale = Locale.getDefault();
         this.recognizerIntent = createIntent(context.getPackageName(), MAX_RESULTS, this.locale.getLanguage());
@@ -77,12 +77,12 @@ public class SpeechRecognizer {
 
 
 
-    private static RecognitionListener createRecognitionListener(final RecognizerCallbacks recognizerCallbacks, final Logger logger) {
+    private static RecognitionListener createRecognitionListener(final RecognizerListener recognizerListener, final Logger logger) {
         return new RecognitionListener() {
             @Override
             public void onReadyForSpeech(Bundle params) {
                 logger.logCall();
-                recognizerCallbacks.onInit();
+                recognizerListener.onInit();
             }
 
             @Override
@@ -93,7 +93,7 @@ public class SpeechRecognizer {
             @Override
             public void onRmsChanged(float rmsdB) {
                 logger.logCall();
-                recognizerCallbacks.onRms(rmsdB);
+                recognizerListener.onRms(rmsdB);
             }
 
             @Override
@@ -109,18 +109,18 @@ public class SpeechRecognizer {
             @Override
             public void onError(int error) {
                 logger.logCall();
-                recognizerCallbacks.onError(error, getErrorText(error));
+                recognizerListener.onError(error, getErrorText(error));
             }
 
             @Override
             public void onResults(Bundle results) {
                 logger.logCall();
                 ArrayList<String> resultsStringArrayList = results.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION);
-                recognizerCallbacks.onResults(resultsStringArrayList);
+                recognizerListener.onResults(resultsStringArrayList);
                 if (resultsStringArrayList.size()>0) {
-                    recognizerCallbacks.onResult(resultsStringArrayList.get(0));
+                    recognizerListener.onResult(resultsStringArrayList.get(0));
                 } else {
-                    recognizerCallbacks.onResult(null);
+                    recognizerListener.onResult(null);
                 }
             }
 
@@ -186,7 +186,7 @@ public class SpeechRecognizer {
     }
 
 //    only important callbacks - other we leave out of sight
-    public static interface RecognizerCallbacks {
+    public static interface RecognizerListener {
         public void onInit();
         public void onResults(ArrayList<String> results);
         public void onResult(String result);
