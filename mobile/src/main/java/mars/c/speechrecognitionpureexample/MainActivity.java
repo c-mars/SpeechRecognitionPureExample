@@ -38,9 +38,7 @@ public class MainActivity extends ActionBarActivity {
         speechRecognizer = new SpeechRecognizer(this, recognizerCallbacks, true);
 
 //        this can be used to list available languages and choose not default language
-//        speechRecognizer.checkAvailableLanguages();
-//        speechRecognizer.setLocale(new Locale("ru"));
-        speechRecognizer.chooseFromAvailableLanguages();
+//        speechRecognizer.chooseFromAvailableLanguages(new DialogLanguageChooser());
 
         toggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 

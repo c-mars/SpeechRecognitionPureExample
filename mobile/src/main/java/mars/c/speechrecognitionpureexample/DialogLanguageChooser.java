@@ -11,12 +11,10 @@ import java.util.Locale;
 /**
  * Created by Constantine Mars on 1/26/15.
  */
-public class LanguageChooser {
-    public interface LanguageChoiceListener {
-        public void onLanguageChoice(String language);
-    }
+public class DialogLanguageChooser implements SpeechRecognizer.LanguageChooser {
 
-    public static void chooseLanguage(Context context, final ArrayList<String> supportedLanguages, final LanguageChoiceListener languageChoiceListener) {
+    @Override
+    public void chooseLanguage(Context context, final ArrayList<String> supportedLanguages, final LanguageChoiceListener languageChoiceListener) {
         String[] languages = new String[supportedLanguages.size()];
 
 //        transform locale descriptions to languages

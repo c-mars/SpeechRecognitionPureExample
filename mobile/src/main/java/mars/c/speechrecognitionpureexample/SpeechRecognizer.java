@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.util.Log;
-import android.view.View;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -219,23 +218,34 @@ public class SpeechRecognizer {
         private boolean on = true;
     }
 
-    public void chooseFromAvailableLanguages() {
+    public void chooseFromAvailableLanguages(LanguageChooser languageChooser) {
         Intent detailsIntent = new Intent(RecognizerIntent.ACTION_GET_LANGUAGE_DETAILS);
-        context.sendOrderedBroadcast(detailsIntent, null, new LanguageDetailsChecker(new LanguageChooser.LanguageChoiceListener() {
+        LanguageChooser.LanguageChoiceListener languageChoiceListener = new LanguageChooser.LanguageChoiceListener() {
             @Override
             public void onLanguageChoice(String language) {
                 locale = createLocale(language);
                 setLocale(locale);
             }
-        }), null, Activity.RESULT_OK, null, null);
+        };
+        context.sendOrderedBroadcast(detailsIntent, null, new LanguageDetailsChecker(languageChooser, languageChoiceListener), null, Activity.RESULT_OK, null, null);
+    }
+
+    public interface LanguageChooser {
+        public abstract void chooseLanguage(Context context, final ArrayList<String> supportedLanguages, final LanguageChoiceListener languageChoiceListener);
+
+        public interface LanguageChoiceListener {
+            public void onLanguageChoice(String language);
+        }
     }
 
     private class LanguageDetailsChecker extends BroadcastReceiver {
         String languagePreference;
         ArrayList<String> languages;
+        LanguageChooser languageChooser;
         LanguageChooser.LanguageChoiceListener languageChoiceListener;
 
-        private LanguageDetailsChecker(LanguageChooser.LanguageChoiceListener languageChoiceListener) {
+        private LanguageDetailsChecker(LanguageChooser languageChooser, LanguageChooser.LanguageChoiceListener languageChoiceListener) {
+            this.languageChooser = languageChooser;
             this.languageChoiceListener = languageChoiceListener;
         }
 
@@ -253,7 +263,6 @@ public class SpeechRecognizer {
                 logger.log("LanguageDetailsChecker.onReceive: languages="+languages.toString());
             }
 
-            LanguageChooser languageChooser = new LanguageChooser();
             languageChooser.chooseLanguage(context, languages, languageChoiceListener);
         }
     }
