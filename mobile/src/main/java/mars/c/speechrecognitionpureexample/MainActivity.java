@@ -10,6 +10,7 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -35,6 +36,10 @@ public class MainActivity extends ActionBarActivity {
 
         recognizerCallbacks = createRecognizerCallbacks();
         speechRecognizer = new SpeechRecognizer(this, recognizerCallbacks, true);
+
+//        this can be used to list available languages and choose not default language
+//        speechRecognizer.checkAvailableLanguages();
+//        speechRecognizer.setLocale(new Locale("ru"));
 
         toggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 

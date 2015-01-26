@@ -1,13 +1,17 @@
 package mars.c.speechrecognitionpureexample;
 
+import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.util.Log;
+import android.view.View;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 /**
  * Created by Constantine Mars on 1/26/15.
@@ -23,6 +27,8 @@ public class SpeechRecognizer {
     private android.speech.SpeechRecognizer speechRecognizer;
     private RecognitionListener recognitionListener;
     private Intent recognizerIntent;
+    private Locale locale;
+    private boolean listening = false;
 
 //    custom
     private RecognizerCallbacks recognizerCallbacks;
@@ -36,7 +42,9 @@ public class SpeechRecognizer {
         this.logger.setOn(useLogger);
 
         this.recognitionListener = createRecognitionListener(this.recognizerCallbacks, this.logger);
-        this.recognizerIntent = createIntent(context.getPackageName(), MAX_RESULTS);
+
+        this.locale = Locale.getDefault();
+        this.recognizerIntent = createIntent(context.getPackageName(), MAX_RESULTS, this.locale.getLanguage());
     }
 
 //    we need to re-create speech recognizer each time (but maybe this bug should be fixed in future)
@@ -44,14 +52,30 @@ public class SpeechRecognizer {
         speechRecognizer = android.speech.SpeechRecognizer.createSpeechRecognizer(context);
         speechRecognizer.setRecognitionListener(recognitionListener);
         speechRecognizer.startListening(this.recognizerIntent);
+        listening = true;
     }
 
     public void stopListening() {
         if (speechRecognizer != null) {
             speechRecognizer.stopListening();
             speechRecognizer.destroy();
+            listening = false;
         }
     }
+
+    public void setLocale(Locale locale) {
+        this.locale = locale;
+        this.recognizerIntent = createIntent(context.getPackageName(), MAX_RESULTS, this.locale.getLanguage());
+
+//        restart listening if needed
+        if (listening) {
+            logger.log("restarting listening");
+            stopListening();
+            startListening();
+        }
+    }
+
+
 
     private static RecognitionListener createRecognitionListener(final RecognizerCallbacks recognizerCallbacks, final Logger logger) {
         return new RecognitionListener() {
@@ -112,9 +136,12 @@ public class SpeechRecognizer {
         };
     }
 
-    private static Intent createIntent(String packageName, int maxResults) {
+    private static Intent createIntent(String packageName, int maxResults, String language) {
         Intent recognizerIntent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, "en");
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, language);
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, language);
+        recognizerIntent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, language);
+//        recognizerIntent.putExtra("android.speech.extra.EXTRA_ADDITIONAL_LANGUAGES", new String[]{language, locale});
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, packageName);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
         recognizerIntent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, maxResults);
@@ -175,6 +202,12 @@ public class SpeechRecognizer {
             }
         }
 
+        public void log(String message) {
+            if(on) {
+                Log.d(TAG, message);
+            }
+        }
+
         public void setOn(boolean on) {
             this.on = on;
         }
@@ -184,4 +217,68 @@ public class SpeechRecognizer {
         private final int STACK_DEPTH = DEFAULT_STACK_DEPTH + 2;
         private boolean on = true;
     }
+
+    public void checkAvailableLanguages() {
+        Intent detailsIntent = new Intent(RecognizerIntent.ACTION_GET_LANGUAGE_DETAILS);
+        context.sendOrderedBroadcast(detailsIntent, null, new LanguageDetailsChecker(), null, Activity.RESULT_OK, null, null);
+    }
+
+    private class LanguageDetailsChecker extends BroadcastReceiver {
+        String languagePreference;
+        ArrayList<String> languages;
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Bundle results = getResultExtras(true);
+
+//            ArrayList<String> languages = new ArrayList<String>();
+
+            if (results.containsKey(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE)) {
+                languagePreference = results.getString(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE);
+                logger.log("LanguageDetailsChecker.onReceive: languagePreference="+languagePreference);
+            }
+
+            if (results.containsKey(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES)) {
+                languages = results.getStringArrayList(RecognizerIntent.EXTRA_SUPPORTED_LANGUAGES);
+                logger.log("LanguageDetailsChecker.onReceive: languages="+languages.toString());
+            }
+
+//            AlertDialog.Builder b = new Builder(contextApp);
+//            for (String s : supportedLanguages) {
+//                Log.d("Supported languages", s);
+//            }
+//            b.setTitle("Choose your language");
+//            b.setItems(supportedLanguages, new OnClickListener() {
+//
+//                @Override
+//                public void onClick(DialogInterface dialog, int which) {
+//
+//                    dialog.dismiss();
+//                    chooseLanguage(which);
+//
+//                }
+//
+//            });
+//
+//            b.show();
+        }
+
+//        private void chooseLanguage(int which) {
+//            String chosenLanguage = languages.get(which);
+//            chooseLanguage(chosenLanguage);
+//        }
+
+//        public void chooseLanguage(Activity activity, String chosenLanguage) {
+//            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+//            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, chosenLanguage);
+//            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, chosenLanguage);
+//            intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, chosenLanguage);
+//            activity.startActivityForResult(intent, 300);
+//            logger.log("Choosing language: "+chosenLanguage);
+//        }
+    }
+
+
+
+
 }
