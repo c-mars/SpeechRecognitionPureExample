@@ -20,8 +20,8 @@ public class MainActivity extends ActionBarActivity {
     private ToggleButton toggleButton;
     private ProgressBar progressBar;
 
-    SpeechRecognizer speechRecognizer;
-    SpeechRecognizer.RecognizerCallbacks recognizerCallbacks;
+    private SpeechRecognizer speechRecognizer;
+    private SpeechRecognizer.RecognizerCallbacks recognizerCallbacks;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
