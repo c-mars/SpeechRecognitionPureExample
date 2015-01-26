@@ -40,6 +40,7 @@ public class MainActivity extends ActionBarActivity {
 //        this can be used to list available languages and choose not default language
 //        speechRecognizer.checkAvailableLanguages();
 //        speechRecognizer.setLocale(new Locale("ru"));
+        speechRecognizer.chooseFromAvailableLanguages();
 
         toggleButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 

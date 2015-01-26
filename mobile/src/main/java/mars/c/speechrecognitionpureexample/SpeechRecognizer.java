@@ -64,6 +64,7 @@ public class SpeechRecognizer {
     }
 
     public void setLocale(Locale locale) {
+        logger.log("setLocale: "+locale.getDisplayLanguage());
         this.locale = locale;
         this.recognizerIntent = createIntent(context.getPackageName(), MAX_RESULTS, this.locale.getLanguage());
 
@@ -218,20 +219,29 @@ public class SpeechRecognizer {
         private boolean on = true;
     }
 
-    public void checkAvailableLanguages() {
+    public void chooseFromAvailableLanguages() {
         Intent detailsIntent = new Intent(RecognizerIntent.ACTION_GET_LANGUAGE_DETAILS);
-        context.sendOrderedBroadcast(detailsIntent, null, new LanguageDetailsChecker(), null, Activity.RESULT_OK, null, null);
+        context.sendOrderedBroadcast(detailsIntent, null, new LanguageDetailsChecker(new LanguageChooser.LanguageChoiceListener() {
+            @Override
+            public void onLanguageChoice(String language) {
+                locale = createLocale(language);
+                setLocale(locale);
+            }
+        }), null, Activity.RESULT_OK, null, null);
     }
 
     private class LanguageDetailsChecker extends BroadcastReceiver {
         String languagePreference;
         ArrayList<String> languages;
+        LanguageChooser.LanguageChoiceListener languageChoiceListener;
+
+        private LanguageDetailsChecker(LanguageChooser.LanguageChoiceListener languageChoiceListener) {
+            this.languageChoiceListener = languageChoiceListener;
+        }
 
         @Override
         public void onReceive(Context context, Intent intent) {
             Bundle results = getResultExtras(true);
-
-//            ArrayList<String> languages = new ArrayList<String>();
 
             if (results.containsKey(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE)) {
                 languagePreference = results.getString(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE);
@@ -243,42 +253,16 @@ public class SpeechRecognizer {
                 logger.log("LanguageDetailsChecker.onReceive: languages="+languages.toString());
             }
 
-//            AlertDialog.Builder b = new Builder(contextApp);
-//            for (String s : supportedLanguages) {
-//                Log.d("Supported languages", s);
-//            }
-//            b.setTitle("Choose your language");
-//            b.setItems(supportedLanguages, new OnClickListener() {
-//
-//                @Override
-//                public void onClick(DialogInterface dialog, int which) {
-//
-//                    dialog.dismiss();
-//                    chooseLanguage(which);
-//
-//                }
-//
-//            });
-//
-//            b.show();
+            LanguageChooser languageChooser = new LanguageChooser();
+            languageChooser.chooseLanguage(context, languages, languageChoiceListener);
         }
-
-//        private void chooseLanguage(int which) {
-//            String chosenLanguage = languages.get(which);
-//            chooseLanguage(chosenLanguage);
-//        }
-
-//        public void chooseLanguage(Activity activity, String chosenLanguage) {
-//            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-//            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, chosenLanguage);
-//            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, chosenLanguage);
-//            intent.putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, chosenLanguage);
-//            activity.startActivityForResult(intent, 300);
-//            logger.log("Choosing language: "+chosenLanguage);
-//        }
     }
 
-
-
-
+    public static Locale createLocale(String localeString) {
+        String[] parts = localeString.split("-");
+        Locale locale = (parts.length > 1
+                ? new Locale(parts[0], parts[1])
+                : new Locale(parts[0]));
+        return locale;
+    }
 }
